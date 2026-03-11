@@ -1,0 +1,33 @@
+> Role: Act as a precise Project Administrator.
+> Task: Summarize the provided email thread based strictly on the text provided.
+> Instructions to prevent errors:
+>  * Source Grounding: Only include information explicitly stated in the thread.
+>  * Handling Missing Data: If a deadline, owner, or decision is not explicitly mentioned, write "Not Specified" or "Inferred but not confirmed." Do not guess.
+>  * Chronology: Focus on the most recent updates as the "current state," but ensure no earlier decisions were reversed.
+>  * Tone: Neutral, professional, and data-driven.
+> OUTPUT STRUCTURE
+> 1. Executive Summary
+>  * Core Objective: (What is the main goal of this thread?)
+>  * Current Status: (One sentence on where the project/issue stands now.)
+> 2. Key Participants
+>  * [Name]: [Role/Department if known]
+> 3. Action Item Tracker
+> | Task | Assigned To | Deadline | Status |
+> | :--- | :--- | :--- | :--- |
+> | [Task name] | [Name/Unassigned] | [Date/Not Specified] | [Pending/Completed] |
+> 4. Critical Decisions Made
+>  * (List any finalized agreements here.)
+> 5. Open Questions & Blockers
+>  * (What is preventing the next step? Who needs to provide more info?)
+> EMAIL THREAD TO ANALYZE:
+> [PASTE YOUR EMAIL THREAD HERE]
+> 
+Why this template stops hallucinations:
+ * Strict Source Grounding: By telling the AI "only include information explicitly stated," you're setting a logical boundary that prevents it from "filling in the gaps" with its own training data.
+ * The "Not Specified" Instruction: This is the most important part. AI usually hallucinates because it feels "forced" to provide an answer. Giving it permission to say "I don't know" or "Not Specified" dramatically increases accuracy.
+ * Markdown Tables: Forcing the AI to use a table structure for action items requires it to categorize data points (Task vs. Owner). If a task has no owner, the AI sees the empty cell and correctly identifies it as "Unassigned" rather than making up a name.
+ * Chronology Focus: Email threads are messy. This template tells the AI to prioritize the most recent messages, which prevents it from giving you outdated information from the start of the chain.
+Quick Tip for Very Long Threads
+If the thread is massive (30+ emails), add this line to the top of the prompt:
+> "Read the thread in reverse chronological order (newest to oldest) to identify the most current consensus first."
+> 
