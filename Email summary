@@ -1,33 +1,197 @@
-> Role: Act as a precise Project Administrator.
-> Task: Summarize the provided email thread based strictly on the text provided.
-> Instructions to prevent errors:
->  * Source Grounding: Only include information explicitly stated in the thread.
->  * Handling Missing Data: If a deadline, owner, or decision is not explicitly mentioned, write "Not Specified" or "Inferred but not confirmed." Do not guess.
->  * Chronology: Focus on the most recent updates as the "current state," but ensure no earlier decisions were reversed.
->  * Tone: Neutral, professional, and data-driven.
-> OUTPUT STRUCTURE
-> 1. Executive Summary
->  * Core Objective: (What is the main goal of this thread?)
->  * Current Status: (One sentence on where the project/issue stands now.)
-> 2. Key Participants
->  * [Name]: [Role/Department if known]
-> 3. Action Item Tracker
-> | Task | Assigned To | Deadline | Status |
-> | :--- | :--- | :--- | :--- |
-> | [Task name] | [Name/Unassigned] | [Date/Not Specified] | [Pending/Completed] |
-> 4. Critical Decisions Made
->  * (List any finalized agreements here.)
-> 5. Open Questions & Blockers
->  * (What is preventing the next step? Who needs to provide more info?)
-> EMAIL THREAD TO ANALYZE:
-> [PASTE YOUR EMAIL THREAD HERE]
-> 
-Why this template stops hallucinations:
- * Strict Source Grounding: By telling the AI "only include information explicitly stated," you're setting a logical boundary that prevents it from "filling in the gaps" with its own training data.
- * The "Not Specified" Instruction: This is the most important part. AI usually hallucinates because it feels "forced" to provide an answer. Giving it permission to say "I don't know" or "Not Specified" dramatically increases accuracy.
- * Markdown Tables: Forcing the AI to use a table structure for action items requires it to categorize data points (Task vs. Owner). If a task has no owner, the AI sees the empty cell and correctly identifies it as "Unassigned" rather than making up a name.
- * Chronology Focus: Email threads are messy. This template tells the AI to prioritize the most recent messages, which prevents it from giving you outdated information from the start of the chain.
-Quick Tip for Very Long Threads
-If the thread is massive (30+ emails), add this line to the top of the prompt:
-> "Read the thread in reverse chronological order (newest to oldest) to identify the most current consensus first."
-> 
+ROLE: Act as a [YOUR ROLE — e.g., "Senior PMO Analyst briefing a Director",
+"Account Manager summarising for a client", "EA preparing notes for an executive"].
+Default if left blank: Precise, neutral summariser preparing a briefing for
+someone who has not read the thread.
+
+TASK: Summarise the provided Outlook email thread based strictly on the
+content provided. Do not infer, assume, or fill gaps with outside knowledge.
+
+════════════════════════════════════════
+GROUND RULES (read before summarising)
+════════════════════════════════════════
+
+* Source Grounding:      Only include information explicitly stated in the thread.
+
+* Missing Data:          If a deadline, owner, or decision is not explicitly
+                         mentioned, write "Not Specified." Never guess.
+
+* Conflicting Info:      If an earlier statement was revised or reversed in a
+                         later email, note it explicitly:
+                         "Initially [X] — revised to [Y] by [Name] on [Date]."
+                         Do not silently resolve conflicts.
+
+* Quoted/Forwarded Text: Outlook threads heavily nest replied and forwarded
+                         content. Treat all re-quoted text as historical
+                         context only. Do not re-attribute it as a new
+                         statement from the person quoting it.
+                         Forwarded blocks (marked "From:" inside the body)
+                         must be treated as separate, attributed to their
+                         original sender, not the forwarder.
+
+* Attachments & Links:   If an attachment or link is referenced, note its
+                         name or description as mentioned in the thread.
+                         Do not describe or infer its contents.
+                         Format: "Attachment referenced: [filename or
+                         description] — contents not available for review."
+
+* Embedded Media:        Images, charts, logos, or diagrams embedded inline
+                         in Outlook emails cannot be interpreted.
+                         Flag their presence only:
+                         "Image detected in email from [Name] on [Date] —
+                         contents not reviewable."
+                         Tables must be read in full — do not truncate,
+                         skip, or paraphrase cell values.
+
+* Ambiguous Threads:     If no clear objective can be identified, do not
+                         fabricate one. Write:
+                         "No explicit objective stated — thread appears to
+                         be [exploratory / informational / unclear]."
+
+* Language:              Summarise in English by default. If the thread
+                         contains emails in other languages, note:
+                         "Email(s) in [language] detected — summarised to
+                         the best extent possible. Verify
+                         translation-sensitive details independently."
+
+* Priority Definitions:  When assigning priority to action items, use only
+                         these criteria —
+                         High   = has a stated deadline OR is blocking
+                                  another task or person.
+                         Medium = requested or expected but no deadline stated.
+                         Low    = mentioned in passing with no follow-up
+                                  expected or requested.
+
+* Chronology:            Scan newest-to-oldest to identify the current
+                         consensus, then verify against the full thread to
+                         confirm no earlier decisions were reversed without
+                         acknowledgment.
+
+* Tone:                  Neutral, professional, and data-driven.
+
+* Length:                Executive Summary: max 3 sentences.
+                         Full output: single-page equivalent unless
+                         complexity genuinely requires more.
+
+════════════════════════════════════════
+OUTPUT STRUCTURE
+════════════════════════════════════════
+
+## 0. Thread Overview
+- Date Range:          [First email date] → [Last email date]
+- Total Emails:        [Count]
+- Total Participants:  [Count]
+- Languages Detected:  [English only / List others if present]
+- Attachments Flagged: [Count, or "None"]
+- Embedded Media:      [Count of inline images/tables, or "None"]
+
+---
+
+## 1. Executive Summary
+- Core Objective: [What is the main goal of this thread?
+                  If unclear: "No explicit objective identified."]
+- Current Status: [One sentence on where things stand right now.]
+
+---
+
+## 2. Key Participants
+| Name | Role / Department | Last Active |
+| :--- | :--- | :--- |
+| [Name] | [Role if stated / "Not Specified"] | [Date of last email] |
+
+---
+
+## 3. Action Item Tracker
+| Task | Assigned To | Deadline | Priority | Status | Source |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| [Task] | [Name / "Unassigned"] | [Date / "Not Specified"] | [High / Medium / Low] | [Pending / In Progress / Completed] | [Email from X, Date] |
+
+---
+
+## 4. Critical Decisions Made
+| Decision | Made By | Date | Reversed? |
+| :--- | :--- | :--- | :--- |
+| [Decision] | [Name / "Not Specified"] | [Date / "Not Specified"] | [No / "Yes — see Section 5"] |
+
+---
+
+## 5. Conflicts & Revisions
+* [Describe any point where an earlier statement was changed, contradicted,
+  or walked back. If none: "No conflicts identified."]
+
+---
+
+## 6. Blockers
+* [What is actively preventing the next step? Who needs to act?
+  If none: "No blockers identified."]
+
+---
+
+## 7. Open Questions
+* [What needs clarification but is not yet a blocker?
+  If none: "No open questions identified."]
+
+---
+
+## 8. Referenced & Embedded Media
+| Item | Type | Referenced By | Date | Contents |
+| :--- | :--- | :--- | :--- | :--- |
+| [Filename / "Inline image"] | [Attachment / Embedded image / Table] | [Name] | [Date] | [Not available for review / Included in summary] |
+
+════════════════════════════════════════
+EMAIL THREAD INPUT — CHOOSE ONE METHOD
+════════════════════════════════════════
+
+METHOD A — Plain Text
+  Use for short threads with no images or complex tables.
+  [PASTE YOUR EMAIL THREAD HERE]
+
+─────────────────────────────────────────
+
+METHOD B — File Attachment (Recommended for Outlook)
+  Use for long threads, or any thread containing images, tables,
+  or formatted content. Delete the METHOD A placeholder above
+  and attach your exported file instead.
+
+  Accepted formats: .pdf or .html
+
+  HOW TO EXPORT FROM OUTLOOK:
+
+  Option 1 — Save as HTML (preserves tables and inline images best)
+    Desktop (Windows):
+      1. Open the email thread in Outlook
+      2. File → Save As
+      3. Set file type to "HTML (*.htm, *.html)"
+      4. Save and attach here
+
+    Desktop (Mac):
+      1. Open the email thread
+      2. File → Save As
+      3. Choose format: "HTML"
+      4. Save and attach here
+
+  Option 2 — Save as PDF (best for long threads)
+    Desktop (Windows):
+      1. Open the email thread in Outlook
+      2. File → Print
+      3. Printer → "Microsoft Print to PDF"
+      4. Click Print, choose save location
+      5. Attach the saved PDF here
+
+    Desktop (Mac):
+      1. Open the email thread
+      2. File → Print
+      3. Bottom-left corner → "PDF" → "Save as PDF"
+      4. Attach the saved PDF here
+
+    Outlook Web (OWA) — any browser:
+      1. Open the email thread
+      2. Click the three-dot menu (⋯) → Print
+      3. In the print dialog → Destination → "Save as PDF"
+      4. Save and attach here
+
+  ⚠ File attachment reminders:
+  * Tables     : Read all cell values in full. Do not skip or summarise.
+  * Images     : Flag presence only — do not infer contents.
+  * Signatures : Ignore email signatures and legal disclaimers entirely.
+  * Formatting : Ignore visual styling, fonts, and colours.
+                 Extract meaning from content only.
