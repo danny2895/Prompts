@@ -1,0 +1,461 @@
+' ============================================================
+' BNP PARIBAS GANTT CHART - VBA MACRO FOR POWERPOINT
+' ============================================================
+' HOW TO USE:
+'   1. Open PowerPoint
+'   2. Press Alt + F11 to open the VBA Editor
+'   3. Click Insert > Module
+'   4. Paste this entire code into the module
+'   5. Press F5 or click Run > Run Sub
+'   6. Switch back to PowerPoint - the slides will be built!
+' ============================================================
+
+Sub CreateBNPGanttChart()
+
+    ' â”€â”€ Presentation setup â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    Dim prs As Presentation
+    Set prs = ActivePresentation
+
+    ' Remove existing slides if any
+    Do While prs.Slides.Count > 0
+        prs.Slides(1).Delete
+    Loop
+
+    ' Set slide size to 16:9 widescreen (inches * 914400 = EMU)
+    prs.PageSetup.SlideWidth = 10 * 72   ' 720 pt = 10 inches
+    prs.PageSetup.SlideHeight = 5.625 * 72  ' 405 pt = 5.625 inches
+
+    ' â”€â”€ Build slides â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    Call CreateTitleSlide(prs)
+    Call CreateGanttSlide(prs)
+
+    MsgBox "BNP Paribas Gantt Chart created successfully! " & Chr(10) & _
+           "You have 2 slides ready.", vbInformation, "Done"
+
+End Sub
+
+
+' ============================================================
+' SLIDE 1 - TITLE SLIDE
+' ============================================================
+Sub CreateTitleSlide(prs As Presentation)
+
+    Dim sld As Slide
+    Set sld = prs.Slides.Add(1, ppLayoutBlank)
+
+    ' Background - deep dark green
+    sld.Background.Fill.ForeColor.RGB = RGB(26, 46, 34)
+    sld.Background.Fill.Solid
+
+    ' Left accent bar (thin green strip on left edge)
+    Dim bar As Shape
+    Set bar = sld.Shapes.AddShape(msoShapeRectangle, 0, 0, 8, 405)
+    bar.Fill.ForeColor.RGB = RGB(0, 150, 94)
+    bar.Line.Visible = msoFalse
+
+    ' BNP Paribas green label box
+    Dim bnpBox As Shape
+    Set bnpBox = sld.Shapes.AddShape(msoShapeRectangle, 25, 25, 200, 40)
+    bnpBox.Fill.ForeColor.RGB = RGB(0, 150, 94)
+    bnpBox.Line.Visible = msoFalse
+    With bnpBox.TextFrame
+        .TextRange.Text = "BNP PARIBAS"
+        .TextRange.Font.Size = 14
+        .TextRange.Font.Bold = True
+        .TextRange.Font.Color.RGB = RGB(255, 255, 255)
+        .TextRange.Font.Name = "Arial"
+        .WordWrap = msoFalse
+        .VerticalAnchor = msoAnchorMiddle
+        .TextRange.ParagraphFormat.Alignment = ppAlignCenter
+    End With
+
+    ' Main title
+    Dim titleBox As Shape
+    Set titleBox = sld.Shapes.AddTextbox(msoTextOrientationHorizontal, 25, 100, 650, 80)
+    With titleBox.TextFrame
+        .TextRange.Text = "Project Gantt Chart"
+        .TextRange.Font.Size = 44
+        .TextRange.Font.Bold = True
+        .TextRange.Font.Color.RGB = RGB(255, 255, 255)
+        .TextRange.Font.Name = "Georgia"
+        .AutoSize = ppAutoSizeNone
+    End With
+
+    ' Green accent line under title
+    Dim accentLine As Shape
+    Set accentLine = sld.Shapes.AddShape(msoShapeRectangle, 25, 185, 324, 4)
+    accentLine.Fill.ForeColor.RGB = RGB(0, 150, 94)
+    accentLine.Line.Visible = msoFalse
+
+    ' Subtitle
+    Dim subBox As Shape
+    Set subBox = sld.Shapes.AddTextbox(msoTextOrientationHorizontal, 25, 198, 580, 30)
+    With subBox.TextFrame
+        .TextRange.Text = "2026 Project Roadmap  |  Programme Delivery Office"
+        .TextRange.Font.Size = 14
+        .TextRange.Font.Color.RGB = RGB(153, 197, 176)
+        .TextRange.Font.Name = "Calibri"
+    End With
+
+    ' Date bottom left
+    Dim dateBox As Shape
+    Set dateBox = sld.Shapes.AddTextbox(msoTextOrientationHorizontal, 25, 353, 150, 25)
+    With dateBox.TextFrame
+        .TextRange.Text = "March 2026"
+        .TextRange.Font.Size = 11
+        .TextRange.Font.Color.RGB = RGB(102, 143, 126)
+        .TextRange.Font.Name = "Calibri"
+    End With
+
+    ' Decorative outer circle (top-right)
+    Dim circle1 As Shape
+    Set circle1 = sld.Shapes.AddShape(msoShapeOval, 519, 58, 252, 252)
+    circle1.Fill.ForeColor.RGB = RGB(0, 150, 94)
+    circle1.Fill.Transparency = 0.88
+    circle1.Line.ForeColor.RGB = RGB(0, 150, 94)
+    circle1.Line.Transparency = 0.7
+
+    ' Decorative inner circle
+    Dim circle2 As Shape
+    Set circle2 = sld.Shapes.AddShape(msoShapeOval, 555, 94, 180, 180)
+    circle2.Fill.ForeColor.RGB = RGB(0, 150, 94)
+    circle2.Fill.Transparency = 0.75
+    circle2.Line.ForeColor.RGB = RGB(0, 150, 94)
+    circle2.Line.Transparency = 0.55
+
+    ' Q1-Q4 text in circle
+    Dim q1Box As Shape
+    Set q1Box = sld.Shapes.AddTextbox(msoTextOrientationHorizontal, 576, 144, 136, 30)
+    With q1Box.TextFrame
+        .TextRange.Text = "Q1-Q4"
+        .TextRange.Font.Size = 20
+        .TextRange.Font.Bold = True
+        .TextRange.Font.Color.RGB = RGB(255, 255, 255)
+        .TextRange.Font.Name = "Georgia"
+        .TextRange.ParagraphFormat.Alignment = ppAlignCenter
+    End With
+
+    ' FY 2026 text
+    Dim fyBox As Shape
+    Set fyBox = sld.Shapes.AddTextbox(msoTextOrientationHorizontal, 573, 179, 144, 20)
+    With fyBox.TextFrame
+        .TextRange.Text = "FY 2026"
+        .TextRange.Font.Size = 12
+        .TextRange.Font.Color.RGB = RGB(153, 197, 176)
+        .TextRange.Font.Name = "Calibri"
+        .TextRange.ParagraphFormat.Alignment = ppAlignCenter
+    End With
+
+End Sub
+
+
+' ============================================================
+' SLIDE 2 - GANTT CHART
+' ============================================================
+Sub CreateGanttSlide(prs As Presentation)
+
+    Dim sld As Slide
+    Set sld = prs.Slides.Add(2, ppLayoutBlank)
+
+    ' White background
+    sld.Background.Fill.ForeColor.RGB = RGB(255, 255, 255)
+    sld.Background.Fill.Solid
+
+    ' â”€â”€ Layout constants (points: 1 inch = 72 pt) â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    Const SW          As Single = 720    ' slide width  (10")
+    Const LABEL_W     As Single = 165.6  ' 2.3" task label column
+    Const CHART_X     As Single = 169.2  ' chart area starts here
+    Const CHART_W     As Single = 532.8  ' chart area width
+    Const MONTHS      As Integer = 12
+    Dim   MON_W       As Single: MON_W = CHART_W / MONTHS
+    Const HEADER_H    As Single = 39.6   ' 0.55"
+    Const MON_ROW_Y   As Single = 39.6
+    Const MON_ROW_H   As Single = 21.6   ' 0.3"
+    Const ROWS_START  As Single = 61.2   ' = HEADER_H + MON_ROW_H
+    Const ROW_H       As Single = 27.36  ' 0.38"
+    Const ROW_GAP     As Single = 2.88   ' 0.04"
+    Const BAR_PAD     As Single = 2.88   ' horizontal padding inside bar
+
+    ' â”€â”€ Colour helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    Dim cDeepBg   As Long: cDeepBg   = RGB(26, 46, 34)
+    Dim cGreen    As Long: cGreen    = RGB(0, 150, 94)
+    Dim cDkGreen  As Long: cDkGreen  = RGB(0, 107, 67)
+    Dim cRowAlt   As Long: cRowAlt   = RGB(234, 246, 240)
+    Dim cMonAlt   As Long: cMonAlt   = RGB(208, 237, 226)
+    Dim cMonBg    As Long: cMonBg    = RGB(232, 245, 239)
+    Dim cDivider  As Long: cDivider  = RGB(200, 222, 214)
+    Dim cGold     As Long: cGold     = RGB(232, 160, 32)
+    Dim cRed      As Long: cRed      = RGB(232, 64, 32)
+    Dim cTextMid  As Long: cTextMid  = RGB(74, 99, 88)
+
+    ' Task bar colours
+    Dim cDone   As Long: cDone   = RGB(0, 150, 94)
+    Dim cActive As Long: cActive = RGB(51, 176, 122)
+    Dim cFuture As Long: cFuture = RGB(153, 217, 188)
+
+    ' â”€â”€ Month names â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    Dim months(11) As String
+    months(0)  = "Jan":  months(1)  = "Feb":  months(2)  = "Mar"
+    months(3)  = "Apr":  months(4)  = "May":  months(5)  = "Jun"
+    months(6)  = "Jul":  months(7)  = "Aug":  months(8)  = "Sep"
+    months(9)  = "Oct":  months(10) = "Nov":  months(11) = "Dec"
+
+    ' â”€â”€ Task data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    ' Format: Name, StartMonth(0-based), EndMonth(exclusive), Type(0=done,1=active,2=future)
+    Dim taskNames(8)  As String
+    Dim taskStart(8)  As Integer
+    Dim taskEnd(8)    As Integer
+    Dim taskType(8)   As Integer   ' 0=done, 1=active, 2=future
+
+    taskNames(0) = "Project Initiation":       taskStart(0) = 0:  taskEnd(0) = 2:  taskType(0) = 0
+    taskNames(1) = "Requirements Analysis":    taskStart(1) = 1:  taskEnd(1) = 3:  taskType(1) = 0
+    taskNames(2) = "System Design":            taskStart(2) = 2:  taskEnd(2) = 4:  taskType(2) = 0
+    taskNames(3) = "Development - Phase 1":    taskStart(3) = 3:  taskEnd(3) = 6:  taskType(3) = 1
+    taskNames(4) = "Development - Phase 2":    taskStart(4) = 5:  taskEnd(4) = 8:  taskType(4) = 1
+    taskNames(5) = "Testing & QA":             taskStart(5) = 7:  taskEnd(5) = 9:  taskType(5) = 2
+    taskNames(6) = "User Acceptance Testing":  taskStart(6) = 8:  taskEnd(6) = 10: taskType(6) = 2
+    taskNames(7) = "Deployment & Go-Live":     taskStart(7) = 9:  taskEnd(7) = 11: taskType(7) = 2
+    taskNames(8) = "Post-Launch Support":      taskStart(8) = 10: taskEnd(8) = 12: taskType(8) = 2
+
+    ' â”€â”€ Milestone data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    Dim msLabels(2) As String
+    Dim msMonths(2) As Integer
+    msLabels(0) = "Design Approved": msMonths(0) = 4
+    msLabels(1) = "Dev Complete":    msMonths(1) = 8
+    msLabels(2) = "Go-Live":         msMonths(2) = 10
+
+    ' â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+    ' HEADER BAR
+    ' â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+    Dim hdr As Shape
+    Set hdr = sld.Shapes.AddShape(msoShapeRectangle, 0, 0, SW, HEADER_H)
+    hdr.Fill.ForeColor.RGB = cDeepBg
+    hdr.Line.Visible = msoFalse
+
+    ' Green left accent in header
+    Dim hdrAccent As Shape
+    Set hdrAccent = sld.Shapes.AddShape(msoShapeRectangle, 0, 0, 7, HEADER_H)
+    hdrAccent.Fill.ForeColor.RGB = cGreen
+    hdrAccent.Line.Visible = msoFalse
+
+    ' Header title text
+    Dim hdrTxt As Shape
+    Set hdrTxt = sld.Shapes.AddTextbox(msoTextOrientationHorizontal, 18, 0, 504, HEADER_H)
+    With hdrTxt.TextFrame
+        .TextRange.Text = "Project Roadmap 2026"
+        .TextRange.Font.Size = 18
+        .TextRange.Font.Bold = True
+        .TextRange.Font.Color.RGB = RGB(255, 255, 255)
+        .TextRange.Font.Name = "Georgia"
+        .VerticalAnchor = msoAnchorMiddle
+    End With
+
+    ' BNP tag top-right
+    Dim bnpTag As Shape
+    Set bnpTag = sld.Shapes.AddShape(msoShapeRectangle, 612, 3.6, 90, 28.8)
+    bnpTag.Fill.ForeColor.RGB = cGreen
+    bnpTag.Line.Visible = msoFalse
+    With bnpTag.TextFrame
+        .TextRange.Text = "BNP PARIBAS"
+        .TextRange.Font.Size = 7
+        .TextRange.Font.Bold = True
+        .TextRange.Font.Color.RGB = RGB(255, 255, 255)
+        .TextRange.Font.Name = "Arial"
+        .VerticalAnchor = msoAnchorMiddle
+        .TextRange.ParagraphFormat.Alignment = ppAlignCenter
+    End With
+
+    ' â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+    ' MONTH HEADER ROW
+    ' â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+    Dim monBg As Shape
+    Set monBg = sld.Shapes.AddShape(msoShapeRectangle, 0, MON_ROW_Y, SW, MON_ROW_H)
+    monBg.Fill.ForeColor.RGB = cMonBg
+    monBg.Line.Visible = msoFalse
+
+    ' "TASK" column header
+    Dim taskHdr As Shape
+    Set taskHdr = sld.Shapes.AddTextbox(msoTextOrientationHorizontal, 7, MON_ROW_Y, LABEL_W, MON_ROW_H)
+    With taskHdr.TextFrame
+        .TextRange.Text = "TASK"
+        .TextRange.Font.Size = 9
+        .TextRange.Font.Bold = True
+        .TextRange.Font.Color.RGB = cDkGreen
+        .TextRange.Font.Name = "Arial"
+        .VerticalAnchor = msoAnchorMiddle
+    End With
+
+    ' Month labels and alternating shading
+    Dim m As Integer
+    For m = 0 To 11
+        Dim mx As Single: mx = CHART_X + m * MON_W
+
+        ' Alternating column shade
+        If m Mod 2 = 0 Then
+            Dim monShade As Shape
+            Set monShade = sld.Shapes.AddShape(msoShapeRectangle, mx, MON_ROW_Y, MON_W, MON_ROW_H)
+            monShade.Fill.ForeColor.RGB = cMonAlt
+            monShade.Line.Visible = msoFalse
+        End If
+
+        ' Month text
+        Dim monTxt As Shape
+        Set monTxt = sld.Shapes.AddTextbox(msoTextOrientationHorizontal, mx, MON_ROW_Y, MON_W, MON_ROW_H)
+        With monTxt.TextFrame
+            .TextRange.Text = months(m)
+            .TextRange.Font.Size = 9
+            .TextRange.Font.Bold = True
+            .TextRange.Font.Color.RGB = cDkGreen
+            .TextRange.Font.Name = "Arial"
+            .VerticalAnchor = msoAnchorMiddle
+            .TextRange.ParagraphFormat.Alignment = ppAlignCenter
+        End With
+    Next m
+
+    ' â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+    ' QUARTER DIVIDER LINES (dashed, after Q1/Q2/Q3)
+    ' â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+    Dim totalRowsH As Single: totalRowsH = 9 * (ROW_H + ROW_GAP)
+    Dim q As Integer
+    For q = 1 To 3
+        Dim qx As Single: qx = CHART_X + q * 3 * MON_W
+        Dim qLine As Shape
+        Set qLine = sld.Shapes.AddLine(qx, MON_ROW_Y, qx, ROWS_START + totalRowsH)
+        qLine.Line.ForeColor.RGB = cGreen
+        qLine.Line.Weight = 0.75
+        qLine.Line.DashStyle = msoLineDash
+    Next q
+
+    ' â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+    ' TASK ROWS + GANTT BARS
+    ' â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+    Dim i As Integer
+    For i = 0 To 8
+        Dim ry As Single: ry = ROWS_START + i * (ROW_H + ROW_GAP)
+
+        ' Alternating row background
+        If i Mod 2 = 1 Then
+            Dim rowBg As Shape
+            Set rowBg = sld.Shapes.AddShape(msoShapeRectangle, 0, ry, SW, ROW_H)
+            rowBg.Fill.ForeColor.RGB = cRowAlt
+            rowBg.Line.Visible = msoFalse
+        End If
+
+        ' Task label
+        Dim lblBox As Shape
+        Set lblBox = sld.Shapes.AddTextbox(msoTextOrientationHorizontal, 14, ry, LABEL_W - 14, ROW_H)
+        With lblBox.TextFrame
+            .TextRange.Text = taskNames(i)
+            .TextRange.Font.Size = 9
+            .TextRange.Font.Color.RGB = cDeepBg
+            .TextRange.Font.Name = "Calibri"
+            .VerticalAnchor = msoAnchorMiddle
+            .AutoSize = ppAutoSizeNone
+        End With
+
+        ' Column divider line
+        Dim divLine As Shape
+        Set divLine = sld.Shapes.AddLine(LABEL_W, ry, LABEL_W, ry + ROW_H)
+        divLine.Line.ForeColor.RGB = cDivider
+        divLine.Line.Weight = 0.75
+
+        ' Gantt bar
+        Dim barX As Single: barX = CHART_X + taskStart(i) * MON_W + BAR_PAD
+        Dim barW As Single: barW = (taskEnd(i) - taskStart(i)) * MON_W - BAR_PAD * 2
+        Dim barY As Single: barY = ry + ROW_H * 0.22
+        Dim barH As Single: barH = ROW_H * 0.56
+
+        Dim ganttBar As Shape
+        Set ganttBar = sld.Shapes.AddShape(msoShapeRoundedRectangle, barX, barY, barW, barH)
+        ganttBar.Adjustments(1) = 0.15  ' corner roundness
+
+        Select Case taskType(i)
+            Case 0: ganttBar.Fill.ForeColor.RGB = cDone
+            Case 1: ganttBar.Fill.ForeColor.RGB = cActive
+            Case 2: ganttBar.Fill.ForeColor.RGB = cFuture
+        End Select
+        ganttBar.Line.Visible = msoFalse
+
+        ' Bar label text
+        Dim barLabel As String
+        Select Case taskType(i)
+            Case 0: barLabel = Chr(10003) & " Complete"
+            Case 1: barLabel = "In Progress"
+            Case 2: barLabel = "Planned"
+        End Select
+
+        With ganttBar.TextFrame
+            .TextRange.Text = barLabel
+            .TextRange.Font.Size = 7.5
+            .TextRange.Font.Bold = True
+            .TextRange.Font.Color.RGB = RGB(255, 255, 255)
+            .TextRange.Font.Name = "Calibri"
+            .VerticalAnchor = msoAnchorMiddle
+            .TextRange.ParagraphFormat.Alignment = ppAlignCenter
+        End With
+    Next i
+
+    ' â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+    ' TODAY LINE  (mid-March = month 2.5)
+    ' â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+    Dim todayX As Single: todayX = CHART_X + 2.5 * MON_W
+    Dim todayLine As Shape
+    Set todayLine = sld.Shapes.AddLine(todayX, MON_ROW_Y, todayX, ROWS_START + totalRowsH)
+    todayLine.Line.ForeColor.RGB = cRed
+    todayLine.Line.Weight = 1.5
+    todayLine.Line.DashStyle = msoLineSysDot
+
+    ' TODAY label box
+    Dim todayTag As Shape
+    Set todayTag = sld.Shapes.AddShape(msoShapeRectangle, todayX - 20, MON_ROW_Y + 0.7, 40, 14.4)
+    todayTag.Fill.ForeColor.RGB = cRed
+    todayTag.Line.Visible = msoFalse
+    With todayTag.TextFrame
+        .TextRange.Text = "TODAY"
+        .TextRange.Font.Size = 6
+        .TextRange.Font.Bold = True
+        .TextRange.Font.Color.RGB = RGB(255, 255, 255)
+        .TextRange.Font.Name = "Arial"
+        .VerticalAnchor = msoAnchorMiddle
+        .TextRange.ParagraphFormat.Alignment = ppAlignCenter
+    End With
+
+    ' â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+    ' MILESTONES  (gold rotated diamond)
+    ' â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+    Dim msTaskRow(2) As Integer
+    msTaskRow(0) = 2   ' Design Approved on System Design row
+    msTaskRow(1) = 4   ' Dev Complete on Dev Phase 2 row
+    msTaskRow(2) = 7   ' Go-Live on Deployment row
+
+    Dim dsz As Single: dsz = 13  ' diamond half-size in pts
+
+    Dim ms As Integer
+    For ms = 0 To 2
+        Dim msRow  As Single: msRow = ROWS_START + msTaskRow(ms) * (ROW_H + ROW_GAP) + ROW_H / 2
+        Dim msX    As Single: msX = CHART_X + msMonths(ms) * MON_W
+
+        ' Gold diamond (rotated square)
+        Dim diamond As Shape
+        Set diamond = sld.Shapes.AddShape(msoShapeRectangle, msX - dsz / 2, msRow - dsz / 2, dsz, dsz)
+        diamond.Fill.ForeColor.RGB = cGold
+        diamond.Line.ForeColor.RGB = RGB(192, 112, 16)
+        diamond.Line.Weight = 1
+        diamond.Rotation = 45
+
+        ' Milestone label below the diamond
+        Dim msLbl As Shape
+        Set msLbl = sld.Shapes.AddTextbox(msoTextOrientationHorizontal, msX - 36, msRow + 10, 72, 18)
+        With msLbl.TextFrame
+            .TextRange.Text = msLabels(ms)
+            .TextRange.Font.Size = 7
+            .TextRange.Font.Bold = True
+            .TextRange.Font.Color.RGB = RGB(160, 96, 16)
+            .TextRange.Font.Name = "Calibri"
+            .TextRange.ParagraphFormat.Alignment = ppAlignCenter
+        End With
+    Next ms
+
+    ' â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+    ' LEGEND
+    ' â•â•â•â•â•â•â•â•â•â•â•â•â•â•â
