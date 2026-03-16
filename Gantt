@@ -1,24 +1,64 @@
 ' ============================================================
-' BNP PARIBAS GANTT CHART - FULLY EDITABLE VBA MACRO
+' BNP PARIBAS GANTT CHART - FULLY DYNAMIC (NO HARDCODING)
 ' ============================================================
 ' HOW TO USE:
-'   1. Open PowerPoint
+'   1. Open PowerPoint (start with a blank presentation)
 '   2. Press Alt + F11 to open the VBA Editor
 '   3. Click Insert > Module
 '   4. Paste this entire code into the module
-'   5. Press F5 or click Run > Run Sub
-'   6. Switch back to PowerPoint - slides are ready to edit!
+'   5. Press F5 or click Run > Run Sub/UserForm
+'   6. A step-by-step wizard will guide you through all inputs
 '
-' EDITING TIPS AFTER RUNNING:
-'   - Click any shape to move, resize, or recolour it
+' AFTER THE SLIDE IS BUILT:
+'   - Click any shape to move or resize it freely
 '   - Double-click any shape to edit its text
-'   - View > Selection Pane to see and select shapes by name
-'   - Right-click shape > Size and Position for exact values
-'   - Hold Shift + click to select multiple shapes at once
+'   - Use View > Selection Pane to find shapes by name
+'   - Right-click > Size and Position for precise values
 ' ============================================================
 
+Option Explicit
+
+' â”€â”€ Global data (filled by wizard, used by builder) â”€â”€â”€â”€â”€â”€â”€â”€
+Dim gTitle       As String
+Dim gSubtitle    As String
+Dim gYear        As String
+Dim gDept        As String
+Dim gTodayMonth  As Single   ' fractional month, e.g. 2.5 = mid-March
+
+Dim gTaskCount   As Integer
+Dim gTaskNames() As String
+Dim gTaskStart() As Integer  ' 0-based month index
+Dim gTaskEnd()   As Integer  ' exclusive end (so 3 months = end - start = 3)
+Dim gTaskType()  As Integer  ' 0 = Complete, 1 = In Progress, 2 = Planned
+
+Dim gMsCount     As Integer
+Dim gMsLabels()  As String
+Dim gMsMonths()  As Integer  ' 0-based month index
+Dim gMsRows()    As Integer  ' 0-based task row index
+
+
+' ============================================================
+' ENTRY POINT
+' ============================================================
 Sub CreateBNPGanttChart()
 
+    ' Run the 3-step input wizard
+    If Not CollectGeneralInfo() Then
+        MsgBox "Cancelled. No slides were created.", vbInformation
+        Exit Sub
+    End If
+
+    If Not CollectTasks() Then
+        MsgBox "Cancelled. No slides were created.", vbInformation
+        Exit Sub
+    End If
+
+    If Not CollectMilestones() Then
+        MsgBox "Cancelled. No slides were created.", vbInformation
+        Exit Sub
+    End If
+
+    ' Clear existing slides and build fresh
     Dim prs As Presentation
     Set prs = ActivePresentation
 
@@ -29,24 +69,299 @@ Sub CreateBNPGanttChart()
     prs.PageSetup.SlideWidth = 720
     prs.PageSetup.SlideHeight = 405
 
-    Call CreateTitleSlide(prs)
-    Call CreateGanttSlide(prs)
+    Call BuildTitleSlide(prs)
+    Call BuildGanttSlide(prs)
 
-    ' Select slide 2 (Gantt) so user lands on it after macro runs
     prs.Slides(2).Select
 
-    MsgBox "Done! Your Gantt chart is ready." & Chr(10) & Chr(10) & _
+    MsgBox "Your Gantt chart is ready!" & Chr(10) & Chr(10) & _
            "EDITING TIPS:" & Chr(10) & _
-           "- Click any shape to move or resize it" & Chr(10) & _
-           "- Double-click any shape to edit text" & Chr(10) & _
-           "- Use View > Selection Pane to find shapes by name", _
+           "  - Click any shape to move or resize it" & Chr(10) & _
+           "  - Double-click any shape to edit text" & Chr(10) & _
+           "  - View > Selection Pane to find shapes by name" & Chr(10) & _
+           "  - Right-click > Size and Position for exact values", _
            vbInformation, "BNP Paribas Gantt Chart"
 
 End Sub
 
 
 ' ============================================================
-' HELPER: Make any shape fully editable and unlocked
+' STEP 1 OF 3 - GENERAL INFORMATION
+' ============================================================
+Function CollectGeneralInfo() As Boolean
+
+    CollectGeneralInfo = False
+
+    ' Project title
+    gTitle = InputBox( _
+        "STEP 1 OF 3 - GENERAL INFORMATION" & Chr(10) & String(40, "-") & Chr(10) & Chr(10) & _
+        "Enter the slide title:" & Chr(10) & _
+        "(This appears as the large heading on both slides)", _
+        "Gantt Chart Wizard - Step 1/3", "Project Gantt Chart")
+    If gTitle = "" Then Exit Function
+
+    ' Subtitle
+    gSubtitle = InputBox( _
+        "STEP 1 OF 3 - GENERAL INFORMATION" & Chr(10) & String(40, "-") & Chr(10) & Chr(10) & _
+        "Enter the subtitle:" & Chr(10) & _
+        "(e.g. project description or roadmap label)", _
+        "Gantt Chart Wizard - Step 1/3", Year(Now) & " Project Roadmap  |  Programme Delivery Office")
+    If gSubtitle = "" Then Exit Function
+
+    ' Year
+    gYear = InputBox( _
+        "STEP 1 OF 3 - GENERAL INFORMATION" & Chr(10) & String(40, "-") & Chr(10) & Chr(10) & _
+        "Enter the project year:" & Chr(10) & _
+        "(Used in the header, footer, and title slide)", _
+        "Gantt Chart Wizard - Step 1/3", CStr(Year(Now)))
+    If gYear = "" Then Exit Function
+
+    ' Department
+    gDept = InputBox( _
+        "STEP 1 OF 3 - GENERAL INFORMATION" & Chr(10) & String(40, "-") & Chr(10) & Chr(10) & _
+        "Enter your department or team name:" & Chr(10) & _
+        "(Appears in the footer and subtitle)", _
+        "Gantt Chart Wizard - Step 1/3", "Programme Delivery Office")
+    If gDept = "" Then Exit Function
+
+    ' Today marker
+    Dim todayStr As String
+    Do
+        todayStr = InputBox( _
+            "STEP 1 OF 3 - GENERAL INFORMATION" & Chr(10) & String(40, "-") & Chr(10) & Chr(10) & _
+            "Enter today's month number (1 to 12):" & Chr(10) & _
+            "  1 = January, 2 = February ... 12 = December" & Chr(10) & Chr(10) & _
+            "This positions the red TODAY marker on the chart.", _
+            "Gantt Chart Wizard - Step 1/3", CStr(Month(Now)))
+        If todayStr = "" Then Exit Function
+        If IsNumeric(todayStr) Then
+            If CInt(todayStr) >= 1 And CInt(todayStr) <= 12 Then Exit Do
+        End If
+        MsgBox "Please enter a whole number between 1 and 12.", vbExclamation, "Invalid Input"
+    Loop
+
+    ' Store as fractional (mid-month position)
+    gTodayMonth = CDbl(todayStr) - 0.5
+
+    CollectGeneralInfo = True
+
+End Function
+
+
+' ============================================================
+' STEP 2 OF 3 - TASKS
+' ============================================================
+Function CollectTasks() As Boolean
+
+    CollectTasks = False
+
+    ' How many tasks?
+    Dim countStr As String
+    Do
+        countStr = InputBox( _
+            "STEP 2 OF 3 - TASKS" & Chr(10) & String(40, "-") & Chr(10) & Chr(10) & _
+            "How many tasks do you want on the Gantt chart?" & Chr(10) & _
+            "(Enter a number between 1 and 12)", _
+            "Gantt Chart Wizard - Step 2/3", "9")
+        If countStr = "" Then Exit Function
+        If IsNumeric(countStr) Then
+            If CInt(countStr) >= 1 And CInt(countStr) <= 12 Then Exit Do
+        End If
+        MsgBox "Please enter a number between 1 and 12.", vbExclamation, "Invalid Input"
+    Loop
+
+    gTaskCount = CInt(countStr)
+    ReDim gTaskNames(gTaskCount - 1)
+    ReDim gTaskStart(gTaskCount - 1)
+    ReDim gTaskEnd(gTaskCount - 1)
+    ReDim gTaskType(gTaskCount - 1)
+
+    Dim i       As Integer
+    Dim nm      As String
+    Dim stStr   As String
+    Dim enStr   As String
+    Dim stStr2  As String
+
+    For i = 0 To gTaskCount - 1
+
+        Dim prefix As String
+        prefix = "TASK " & (i + 1) & " OF " & gTaskCount & Chr(10) & String(40, "-") & Chr(10) & Chr(10)
+
+        ' Task name
+        nm = InputBox( _
+            prefix & "Task name:" & Chr(10) & _
+            "(e.g. Requirements Analysis, Development Phase 1)", _
+            "Gantt Chart Wizard - Task " & (i + 1) & "/" & gTaskCount, _
+            "Task " & (i + 1))
+        If nm = "" Then Exit Function
+        gTaskNames(i) = nm
+
+        ' Start month
+        Do
+            stStr = InputBox( _
+                prefix & "Task: " & nm & Chr(10) & Chr(10) & _
+                "Start month (1 to 12):" & Chr(10) & _
+                "  1 = January, 2 = February ... 12 = December", _
+                "Gantt Chart Wizard - Task " & (i + 1) & "/" & gTaskCount, _
+                CStr(i + 1))
+            If stStr = "" Then Exit Function
+            If IsNumeric(stStr) Then
+                If CInt(stStr) >= 1 And CInt(stStr) <= 12 Then Exit Do
+            End If
+            MsgBox "Please enter a number between 1 and 12.", vbExclamation, "Invalid Input"
+        Loop
+        gTaskStart(i) = CInt(stStr) - 1   ' convert to 0-based index
+
+        ' End month
+        Do
+            enStr = InputBox( _
+                prefix & "Task: " & nm & Chr(10) & Chr(10) & _
+                "End month (1 to 12):" & Chr(10) & _
+                "  Must be AFTER the start month (" & stStr & ")" & Chr(10) & _
+                "  e.g. starts Jan (1), ends Mar (3) = 3 months long", _
+                "Gantt Chart Wizard - Task " & (i + 1) & "/" & gTaskCount, _
+                CStr(CInt(stStr) + 2))
+            If enStr = "" Then Exit Function
+            If IsNumeric(enStr) Then
+                If CInt(enStr) >= CInt(stStr) And CInt(enStr) <= 12 Then Exit Do
+            End If
+            MsgBox "End month must be " & stStr & " or later, and no more than 12.", _
+                   vbExclamation, "Invalid Input"
+        Loop
+        gTaskEnd(i) = CInt(enStr)          ' 1-based inclusive end stored directly
+
+        ' Status
+        Dim statusStr As String
+        Do
+            statusStr = InputBox( _
+                prefix & "Task: " & nm & Chr(10) & Chr(10) & _
+                "Task status - enter one letter:" & Chr(10) & Chr(10) & _
+                "  C  =  Complete  (dark green bar)" & Chr(10) & _
+                "  I  =  In Progress  (medium green bar)" & Chr(10) & _
+                "  P  =  Planned  (light green bar)", _
+                "Gantt Chart Wizard - Task " & (i + 1) & "/" & gTaskCount, "P")
+            If statusStr = "" Then Exit Function
+            Select Case UCase(Left(Trim(statusStr), 1))
+                Case "C": gTaskType(i) = 0: Exit Do
+                Case "I": gTaskType(i) = 1: Exit Do
+                Case "P": gTaskType(i) = 2: Exit Do
+                Case Else
+                    MsgBox "Please type C, I, or P.", vbExclamation, "Invalid Input"
+            End Select
+        Loop
+
+    Next i
+
+    CollectTasks = True
+
+End Function
+
+
+' ============================================================
+' STEP 3 OF 3 - MILESTONES
+' ============================================================
+Function CollectMilestones() As Boolean
+
+    CollectMilestones = False
+
+    ' How many milestones?
+    Dim countStr As String
+    Do
+        countStr = InputBox( _
+            "STEP 3 OF 3 - MILESTONES" & Chr(10) & String(40, "-") & Chr(10) & Chr(10) & _
+            "How many milestones? (0 to 5)" & Chr(10) & Chr(10) & _
+            "Milestones appear as gold diamonds on the chart." & Chr(10) & _
+            "Enter 0 if you don't need any.", _
+            "Gantt Chart Wizard - Step 3/3", "3")
+        If countStr = "" Then Exit Function
+        If IsNumeric(countStr) Then
+            If CInt(countStr) >= 0 And CInt(countStr) <= 5 Then Exit Do
+        End If
+        MsgBox "Please enter a number between 0 and 5.", vbExclamation, "Invalid Input"
+    Loop
+
+    gMsCount = CInt(countStr)
+
+    If gMsCount = 0 Then
+        CollectMilestones = True
+        Exit Function
+    End If
+
+    ReDim gMsLabels(gMsCount - 1)
+    ReDim gMsMonths(gMsCount - 1)
+    ReDim gMsRows(gMsCount - 1)
+
+    Dim ms As Integer
+    For ms = 0 To gMsCount - 1
+
+        Dim prefix As String
+        prefix = "MILESTONE " & (ms + 1) & " OF " & gMsCount & Chr(10) & String(40, "-") & Chr(10) & Chr(10)
+
+        ' Milestone name
+        Dim msName As String
+        msName = InputBox( _
+            prefix & "Milestone name:" & Chr(10) & _
+            "(e.g. Design Sign-off, Go-Live, Phase Complete)", _
+            "Gantt Chart Wizard - Milestone " & (ms + 1) & "/" & gMsCount, _
+            "Milestone " & (ms + 1))
+        If msName = "" Then Exit Function
+        gMsLabels(ms) = msName
+
+        ' Month
+        Dim msMonStr As String
+        Do
+            msMonStr = InputBox( _
+                prefix & "Milestone: " & msName & Chr(10) & Chr(10) & _
+                "Which month should the diamond appear on? (1-12)", _
+                "Gantt Chart Wizard - Milestone " & (ms + 1) & "/" & gMsCount, _
+                CStr(ms * 3 + 3))
+            If msMonStr = "" Then Exit Function
+            If IsNumeric(msMonStr) Then
+                If CInt(msMonStr) >= 1 And CInt(msMonStr) <= 12 Then Exit Do
+            End If
+            MsgBox "Please enter a number between 1 and 12.", vbExclamation, "Invalid Input"
+        Loop
+        gMsMonths(ms) = CInt(msMonStr) - 1   ' convert to 0-based
+
+        ' Task row
+        Dim msRowStr As String
+        Do
+            msRowStr = InputBox( _
+                prefix & "Milestone: " & msName & Chr(10) & Chr(10) & _
+                "Which task row should the diamond sit on? (1 to " & gTaskCount & ")" & Chr(10) & Chr(10) & _
+                "Your tasks:" & Chr(10) & ListTasks(), _
+                "Gantt Chart Wizard - Milestone " & (ms + 1) & "/" & gMsCount, _
+                CStr(ms + 1))
+            If msRowStr = "" Then Exit Function
+            If IsNumeric(msRowStr) Then
+                If CInt(msRowStr) >= 1 And CInt(msRowStr) <= gTaskCount Then Exit Do
+            End If
+            MsgBox "Please enter a number between 1 and " & gTaskCount & ".", _
+                   vbExclamation, "Invalid Input"
+        Loop
+        gMsRows(ms) = CInt(msRowStr) - 1     ' convert to 0-based
+
+    Next ms
+
+    CollectMilestones = True
+
+End Function
+
+
+' Helper: returns numbered task list as a string (for milestone prompt)
+Function ListTasks() As String
+    Dim s As String
+    Dim i As Integer
+    s = ""
+    For i = 0 To gTaskCount - 1
+        s = s & "  " & (i + 1) & ". " & gTaskNames(i) & Chr(10)
+    Next i
+    ListTasks = s
+End Function
+
+
+' ============================================================
+' HELPER: Unlock and name every shape for easy editing
 ' ============================================================
 Sub MakeEditable(shp As Shape, shapeName As String)
     shp.Name = shapeName
@@ -56,9 +371,9 @@ End Sub
 
 
 ' ============================================================
-' SLIDE 1 - TITLE SLIDE
+' BUILD SLIDE 1 - TITLE SLIDE
 ' ============================================================
-Sub CreateTitleSlide(prs As Presentation)
+Sub BuildTitleSlide(prs As Presentation)
 
     Dim sld        As Slide
     Dim bar        As Shape
@@ -76,13 +391,11 @@ Sub CreateTitleSlide(prs As Presentation)
     sld.Background.Fill.ForeColor.RGB = RGB(26, 46, 34)
     sld.Background.Fill.Solid
 
-    ' Left accent bar
     Set bar = sld.Shapes.AddShape(msoShapeRectangle, 0, 0, 8, 405)
     bar.Fill.ForeColor.RGB = RGB(0, 150, 94)
     bar.Line.Visible = msoFalse
     Call MakeEditable(bar, "LeftAccentBar")
 
-    ' BNP Paribas label box
     Set bnpBox = sld.Shapes.AddShape(msoShapeRectangle, 25, 25, 200, 40)
     bnpBox.Fill.ForeColor.RGB = RGB(0, 150, 94)
     bnpBox.Line.Visible = msoFalse
@@ -98,10 +411,9 @@ Sub CreateTitleSlide(prs As Presentation)
     End With
     Call MakeEditable(bnpBox, "BNP_LogoBox")
 
-    ' Main title
     Set titleBox = sld.Shapes.AddTextbox(msoTextOrientationHorizontal, 25, 100, 650, 80)
     With titleBox.TextFrame
-        .TextRange.Text = "Project Gantt Chart"
+        .TextRange.Text = gTitle
         .TextRange.Font.Size = 44
         .TextRange.Font.Bold = True
         .TextRange.Font.Color.RGB = RGB(255, 255, 255)
@@ -110,33 +422,29 @@ Sub CreateTitleSlide(prs As Presentation)
     End With
     Call MakeEditable(titleBox, "MainTitle")
 
-    ' Green accent line
     Set accentLine = sld.Shapes.AddShape(msoShapeRectangle, 25, 185, 324, 4)
     accentLine.Fill.ForeColor.RGB = RGB(0, 150, 94)
     accentLine.Line.Visible = msoFalse
     Call MakeEditable(accentLine, "TitleAccentLine")
 
-    ' Subtitle
     Set subBox = sld.Shapes.AddTextbox(msoTextOrientationHorizontal, 25, 198, 580, 30)
     With subBox.TextFrame
-        .TextRange.Text = "2026 Project Roadmap  |  Programme Delivery Office"
+        .TextRange.Text = gSubtitle
         .TextRange.Font.Size = 14
         .TextRange.Font.Color.RGB = RGB(153, 197, 176)
         .TextRange.Font.Name = "Calibri"
     End With
     Call MakeEditable(subBox, "Subtitle")
 
-    ' Date
-    Set dateBox = sld.Shapes.AddTextbox(msoTextOrientationHorizontal, 25, 353, 150, 25)
+    Set dateBox = sld.Shapes.AddTextbox(msoTextOrientationHorizontal, 25, 353, 200, 25)
     With dateBox.TextFrame
-        .TextRange.Text = "March 2026"
+        .TextRange.Text = Format(Now, "MMMM YYYY")
         .TextRange.Font.Size = 11
         .TextRange.Font.Color.RGB = RGB(102, 143, 126)
         .TextRange.Font.Name = "Calibri"
     End With
     Call MakeEditable(dateBox, "SlideDate")
 
-    ' Decorative outer circle
     Set circle1 = sld.Shapes.AddShape(msoShapeOval, 519, 58, 252, 252)
     circle1.Fill.ForeColor.RGB = RGB(0, 150, 94)
     circle1.Fill.Transparency = 0.88
@@ -144,7 +452,6 @@ Sub CreateTitleSlide(prs As Presentation)
     circle1.Line.Transparency = 0.7
     Call MakeEditable(circle1, "DecorCircleOuter")
 
-    ' Decorative inner circle
     Set circle2 = sld.Shapes.AddShape(msoShapeOval, 555, 94, 180, 180)
     circle2.Fill.ForeColor.RGB = RGB(0, 150, 94)
     circle2.Fill.Transparency = 0.75
@@ -152,7 +459,6 @@ Sub CreateTitleSlide(prs As Presentation)
     circle2.Line.Transparency = 0.55
     Call MakeEditable(circle2, "DecorCircleInner")
 
-    ' Q1-Q4 label
     Set q1Box = sld.Shapes.AddTextbox(msoTextOrientationHorizontal, 576, 144, 136, 30)
     With q1Box.TextFrame
         .TextRange.Text = "Q1-Q4"
@@ -164,10 +470,9 @@ Sub CreateTitleSlide(prs As Presentation)
     End With
     Call MakeEditable(q1Box, "QuarterLabel")
 
-    ' FY label
     Set fyBox = sld.Shapes.AddTextbox(msoTextOrientationHorizontal, 573, 179, 144, 20)
     With fyBox.TextFrame
-        .TextRange.Text = "FY 2026"
+        .TextRange.Text = "FY " & gYear
         .TextRange.Font.Size = 12
         .TextRange.Font.Color.RGB = RGB(153, 197, 176)
         .TextRange.Font.Name = "Calibri"
@@ -179,11 +484,11 @@ End Sub
 
 
 ' ============================================================
-' SLIDE 2 - GANTT CHART
+' BUILD SLIDE 2 - GANTT CHART
 ' ============================================================
-Sub CreateGanttSlide(prs As Presentation)
+Sub BuildGanttSlide(prs As Presentation)
 
-    ' â”€â”€ All Dims at top (VBA requirement) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    ' â”€â”€ All Dims at top â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     Dim sld         As Slide
     Dim i           As Integer
     Dim m           As Integer
@@ -246,17 +551,10 @@ Sub CreateGanttSlide(prs As Presentation)
     Dim ftLeft      As Shape
     Dim ftRight     As Shape
 
-    Dim taskNames(8)  As String
-    Dim taskStart(8)  As Integer
-    Dim taskEnd(8)    As Integer
-    Dim taskType(8)   As Integer
-    Dim months(11)    As String
-    Dim msLabels(2)   As String
-    Dim msMonths(2)   As Integer
-    Dim msTaskRow(2)  As Integer
-    Dim barLabel      As String
+    Dim months(11)  As String
+    Dim barLabel    As String
 
-    ' â”€â”€ Layout constants â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    ' â”€â”€ Layout â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     Const SW         As Single = 720
     Const SH         As Single = 405
     Const LABEL_W    As Single = 165.6
@@ -267,12 +565,22 @@ Sub CreateGanttSlide(prs As Presentation)
     Const MON_ROW_Y  As Single = 39.6
     Const MON_ROW_H  As Single = 21.6
     Const ROWS_START As Single = 61.2
-    Const ROW_H      As Single = 27.36
-    Const ROW_GAP    As Single = 2.88
     Const BAR_PAD    As Single = 2.88
+
+    ' Row height is dynamic based on task count so everything fits
+    Dim ROW_H   As Single
+    Dim ROW_GAP As Single
+    Dim availH  As Single
+
+    availH = SH - ROWS_START - 35   ' leave room for legend and footer
+    ROW_H   = (availH / gTaskCount) * 0.88
+    ROW_GAP = (availH / gTaskCount) * 0.12
+    If ROW_H > 30 Then ROW_H = 30
+    If ROW_GAP > 4 Then ROW_GAP = 4
 
     MON_W = CHART_W / MONTHS_CNT
     dsz = 13
+    totalRowsH = gTaskCount * (ROW_H + ROW_GAP)
 
     ' â”€â”€ Colours â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     cDeepBg  = RGB(26, 46, 34)
@@ -289,40 +597,18 @@ Sub CreateGanttSlide(prs As Presentation)
     cActive  = RGB(51, 176, 122)
     cFuture  = RGB(153, 217, 188)
 
-    ' â”€â”€ Month names â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    ' â”€â”€ Month labels â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     months(0) = "Jan": months(1)  = "Feb": months(2)  = "Mar"
     months(3) = "Apr": months(4)  = "May": months(5)  = "Jun"
     months(6) = "Jul": months(7)  = "Aug": months(8)  = "Sep"
     months(9) = "Oct": months(10) = "Nov": months(11) = "Dec"
-
-    ' â”€â”€ Task data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    ' To change tasks: edit the name, start month (0=Jan),
-    ' end month (exclusive), and type (0=done,1=active,2=future)
-    taskNames(0) = "Project Initiation":       taskStart(0) = 0:  taskEnd(0) = 2:  taskType(0) = 0
-    taskNames(1) = "Requirements Analysis":    taskStart(1) = 1:  taskEnd(1) = 3:  taskType(1) = 0
-    taskNames(2) = "System Design":            taskStart(2) = 2:  taskEnd(2) = 4:  taskType(2) = 0
-    taskNames(3) = "Development - Phase 1":    taskStart(3) = 3:  taskEnd(3) = 6:  taskType(3) = 1
-    taskNames(4) = "Development - Phase 2":    taskStart(4) = 5:  taskEnd(4) = 8:  taskType(4) = 1
-    taskNames(5) = "Testing & QA":             taskStart(5) = 7:  taskEnd(5) = 9:  taskType(5) = 2
-    taskNames(6) = "User Acceptance Testing":  taskStart(6) = 8:  taskEnd(6) = 10: taskType(6) = 2
-    taskNames(7) = "Deployment & Go-Live":     taskStart(7) = 9:  taskEnd(7) = 11: taskType(7) = 2
-    taskNames(8) = "Post-Launch Support":      taskStart(8) = 10: taskEnd(8) = 12: taskType(8) = 2
-
-    ' â”€â”€ Milestone data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    msLabels(0) = "Design Approved": msMonths(0) = 4:  msTaskRow(0) = 2
-    msLabels(1) = "Dev Complete":    msMonths(1) = 8:  msTaskRow(1) = 4
-    msLabels(2) = "Go-Live":         msMonths(2) = 10: msTaskRow(2) = 7
-
-    totalRowsH = 9 * (ROW_H + ROW_GAP)
 
     ' â”€â”€ Create slide â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     Set sld = prs.Slides.Add(2, ppLayoutBlank)
     sld.Background.Fill.ForeColor.RGB = RGB(255, 255, 255)
     sld.Background.Fill.Solid
 
-    ' â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-    ' HEADER
-    ' â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+    ' â”€â”€ Header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     Set hdr = sld.Shapes.AddShape(msoShapeRectangle, 0, 0, SW, HEADER_H)
     hdr.Fill.ForeColor.RGB = cDeepBg
     hdr.Line.Visible = msoFalse
@@ -335,7 +621,7 @@ Sub CreateGanttSlide(prs As Presentation)
 
     Set hdrTxt = sld.Shapes.AddTextbox(msoTextOrientationHorizontal, 18, 0, 504, HEADER_H)
     With hdrTxt.TextFrame
-        .TextRange.Text = "Project Roadmap 2026"
+        .TextRange.Text = gTitle & " " & gYear
         .TextRange.Font.Size = 18
         .TextRange.Font.Bold = True
         .TextRange.Font.Color.RGB = RGB(255, 255, 255)
@@ -358,9 +644,7 @@ Sub CreateGanttSlide(prs As Presentation)
     End With
     Call MakeEditable(bnpTag, "Header_BNPTag")
 
-    ' â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-    ' MONTH ROW
-    ' â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+    ' â”€â”€ Month row â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     Set monBg = sld.Shapes.AddShape(msoShapeRectangle, 0, MON_ROW_Y, SW, MON_ROW_H)
     monBg.Fill.ForeColor.RGB = cMonBg
     monBg.Line.Visible = msoFalse
@@ -398,9 +682,7 @@ Sub CreateGanttSlide(prs As Presentation)
         Call MakeEditable(monTxt, "MonthLabel_" & months(m))
     Next m
 
-    ' â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-    ' QUARTER DIVIDERS
-    ' â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+    ' â”€â”€ Quarter dividers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     For q = 1 To 3
         qx = CHART_X + q * 3 * MON_W
         Set qLine = sld.Shapes.AddLine(qx, MON_ROW_Y, qx, ROWS_START + totalRowsH)
@@ -410,13 +692,10 @@ Sub CreateGanttSlide(prs As Presentation)
         Call MakeEditable(qLine, "QuarterDivider_Q" & q)
     Next q
 
-    ' â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-    ' TASK ROWS + GANTT BARS
-    ' â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-    For i = 0 To 8
+    ' â”€â”€ Task rows + Gantt bars â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    For i = 0 To gTaskCount - 1
         ry = ROWS_START + i * (ROW_H + ROW_GAP)
 
-        ' Alternating row background
         If i Mod 2 = 1 Then
             Set rowBg = sld.Shapes.AddShape(msoShapeRectangle, 0, ry, SW, ROW_H)
             rowBg.Fill.ForeColor.RGB = cRowAlt
@@ -424,27 +703,24 @@ Sub CreateGanttSlide(prs As Presentation)
             Call MakeEditable(rowBg, "RowBg_" & i)
         End If
 
-        ' Task label â€” double-click to rename
         Set lblBox = sld.Shapes.AddTextbox(msoTextOrientationHorizontal, 14, ry, LABEL_W - 14, ROW_H)
         With lblBox.TextFrame
-            .TextRange.Text = taskNames(i)
+            .TextRange.Text = gTaskNames(i)
             .TextRange.Font.Size = 9
             .TextRange.Font.Color.RGB = cDeepBg
             .TextRange.Font.Name = "Calibri"
             .VerticalAnchor = msoAnchorMiddle
             .AutoSize = ppAutoSizeNone
         End With
-        Call MakeEditable(lblBox, "TaskLabel_" & i & "_" & taskNames(i))
+        Call MakeEditable(lblBox, "TaskLabel_" & (i + 1))
 
-        ' Column divider
         Set divLine = sld.Shapes.AddLine(LABEL_W, ry, LABEL_W, ry + ROW_H)
         divLine.Line.ForeColor.RGB = cDivider
         divLine.Line.Weight = 0.75
-        Call MakeEditable(divLine, "RowDivider_" & i)
+        Call MakeEditable(divLine, "RowDivider_" & (i + 1))
 
-        ' Gantt bar â€” drag edges to change duration, drag body to shift dates
-        barX = CHART_X + taskStart(i) * MON_W + BAR_PAD
-        barW = (taskEnd(i) - taskStart(i)) * MON_W - BAR_PAD * 2
+        barX = CHART_X + gTaskStart(i) * MON_W + BAR_PAD
+        barW = (gTaskEnd(i) - gTaskStart(i)) * MON_W - BAR_PAD * 2
         barY = ry + ROW_H * 0.22
         barH = ROW_H * 0.56
 
@@ -452,13 +728,13 @@ Sub CreateGanttSlide(prs As Presentation)
         ganttBar.Adjustments(1) = 0.15
         ganttBar.Line.Visible = msoFalse
 
-        Select Case taskType(i)
+        Select Case gTaskType(i)
             Case 0: ganttBar.Fill.ForeColor.RGB = cDone
             Case 1: ganttBar.Fill.ForeColor.RGB = cActive
             Case 2: ganttBar.Fill.ForeColor.RGB = cFuture
         End Select
 
-        Select Case taskType(i)
+        Select Case gTaskType(i)
             Case 0: barLabel = Chr(10003) & " Complete"
             Case 1: barLabel = "In Progress"
             Case 2: barLabel = "Planned"
@@ -473,14 +749,12 @@ Sub CreateGanttSlide(prs As Presentation)
             .VerticalAnchor = msoAnchorMiddle
             .TextRange.ParagraphFormat.Alignment = ppAlignCenter
         End With
-        Call MakeEditable(ganttBar, "GanttBar_" & i & "_" & taskNames(i))
+        Call MakeEditable(ganttBar, "GanttBar_" & (i + 1) & "_" & gTaskNames(i))
 
     Next i
 
-    ' â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-    ' TODAY LINE
-    ' â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-    todayX = CHART_X + 2.5 * MON_W
+    ' â”€â”€ Today line â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    todayX = CHART_X + gTodayMonth * MON_W
     Set todayLine = sld.Shapes.AddLine(todayX, MON_ROW_Y, todayX, ROWS_START + totalRowsH)
     todayLine.Line.ForeColor.RGB = cRed
     todayLine.Line.Weight = 1.5
@@ -501,35 +775,31 @@ Sub CreateGanttSlide(prs As Presentation)
     End With
     Call MakeEditable(todayTag, "TodayTag")
 
-    ' â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-    ' MILESTONES
-    ' â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-    For ms = 0 To 2
-        msRow = ROWS_START + msTaskRow(ms) * (ROW_H + ROW_GAP) + ROW_H / 2
-        msX = CHART_X + msMonths(ms) * MON_W
+    ' â”€â”€ Milestones â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    For ms = 0 To gMsCount - 1
+        msRow = ROWS_START + gMsRows(ms) * (ROW_H + ROW_GAP) + ROW_H / 2
+        msX = CHART_X + gMsMonths(ms) * MON_W
 
         Set diamond = sld.Shapes.AddShape(msoShapeRectangle, msX - dsz / 2, msRow - dsz / 2, dsz, dsz)
         diamond.Fill.ForeColor.RGB = cGold
         diamond.Line.ForeColor.RGB = RGB(192, 112, 16)
         diamond.Line.Weight = 1
         diamond.Rotation = 45
-        Call MakeEditable(diamond, "Milestone_Diamond_" & msLabels(ms))
+        Call MakeEditable(diamond, "Milestone_Diamond_" & (ms + 1))
 
         Set msLbl = sld.Shapes.AddTextbox(msoTextOrientationHorizontal, msX - 36, msRow + 10, 72, 18)
         With msLbl.TextFrame
-            .TextRange.Text = msLabels(ms)
+            .TextRange.Text = gMsLabels(ms)
             .TextRange.Font.Size = 7
             .TextRange.Font.Bold = True
             .TextRange.Font.Color.RGB = RGB(160, 96, 16)
             .TextRange.Font.Name = "Calibri"
             .TextRange.ParagraphFormat.Alignment = ppAlignCenter
         End With
-        Call MakeEditable(msLbl, "Milestone_Label_" & msLabels(ms))
+        Call MakeEditable(msLbl, "Milestone_Label_" & (ms + 1))
     Next ms
 
-    ' â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-    ' LEGEND
-    ' â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+    ' â”€â”€ Legend â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     legendY = ROWS_START + totalRowsH + 4
     lx = 21.6
 
@@ -550,8 +820,8 @@ Sub CreateGanttSlide(prs As Presentation)
     Set leg3 = sld.Shapes.AddShape(msoShapeRoundedRectangle, lx, legendY + 2, 18, 12)
     leg3.Fill.ForeColor.RGB = cFuture
     leg3.Line.Visible = msoFalse
-    Call MakeEditable(leg3, "Legend_FutureBox")
-    Call AddLegendLabel(sld, lx + 22, legendY, "Planned", cTextMid, "Legend_FutureText")
+    Call MakeEditable(leg3, "Legend_PlannedBox")
+    Call AddLegendLabel(sld, lx + 22, legendY, "Planned", cTextMid, "Legend_PlannedText")
 
     lx = lx + 93.6
     Set legDia = sld.Shapes.AddShape(msoShapeRectangle, lx + 3, legendY + 2, 10, 10)
@@ -569,17 +839,15 @@ Sub CreateGanttSlide(prs As Presentation)
     Call MakeEditable(legLine, "Legend_TodayLine")
     Call AddLegendLabel(sld, lx + 22, legendY, "Today", cTextMid, "Legend_TodayText")
 
-    ' â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-    ' FOOTER
-    ' â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+    ' â”€â”€ Footer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     Set footer = sld.Shapes.AddShape(msoShapeRectangle, 0, SH - 16, SW, 16)
     footer.Fill.ForeColor.RGB = cDeepBg
     footer.Line.Visible = msoFalse
     Call MakeEditable(footer, "Footer_Background")
 
-    Set ftLeft = sld.Shapes.AddTextbox(msoTextOrientationHorizontal, 18, SH - 16, 450, 16)
+    Set ftLeft = sld.Shapes.AddTextbox(msoTextOrientationHorizontal, 18, SH - 16, 500, 16)
     With ftLeft.TextFrame
-        .TextRange.Text = "BNP PARIBAS  |  Programme Delivery Office  |  Confidential"
+        .TextRange.Text = "BNP PARIBAS  |  " & gDept & "  |  Confidential"
         .TextRange.Font.Size = 6.5
         .TextRange.Font.Color.RGB = RGB(102, 143, 126)
         .TextRange.Font.Name = "Calibri"
@@ -589,7 +857,7 @@ Sub CreateGanttSlide(prs As Presentation)
 
     Set ftRight = sld.Shapes.AddTextbox(msoTextOrientationHorizontal, 633.6, SH - 16, 72, 16)
     With ftRight.TextFrame
-        .TextRange.Text = "2026"
+        .TextRange.Text = gYear
         .TextRange.Font.Size = 6.5
         .TextRange.Font.Color.RGB = RGB(102, 143, 126)
         .TextRange.Font.Name = "Calibri"
@@ -602,7 +870,7 @@ End Sub
 
 
 ' ============================================================
-' HELPER: Add a legend text label
+' HELPER: Add a legend label
 ' ============================================================
 Sub AddLegendLabel(sld As Slide, x As Single, y As Single, _
                    txt As String, col As Long, shapeName As String)
