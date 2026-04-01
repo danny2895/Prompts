@@ -1,0 +1,74 @@
+## Harmonized Error Comment Framework — All Markets
+
+Based on analysis of NL, RECRAS, FR, BE, and CH reference sheets, here is a consolidated taxonomy with generalized template comments. Market-specific terms (e.g., 276DIV, Form 85, RSIN) should be inserted via the **XXXX/YYYY** placeholder convention already used across your sheets.
+
+---
+
+### Section 1 — Document-Related Pending Reasons
+
+| # | Category | Sub-Category | Harmonized Template Comment | Document Type(s) |
+|---|----------|-------------|----------------------------|-----------------|
+| 1.1 | **Missing** | Missing Document | "Document (XXXX) is missing." | COR / LOA / POA / LOR / Credit Advice / BO List / Breakdown / Reclaim Form / Tax Form / Bank Certificate / Annex / Tax Voucher / Form XXXX |
+| 1.2 | **Missing** | Missing Letterhead / Power of Attorney | "Client Letterhead is missing." / "Power of Attorney to be granted to intermediary." | LOA / POA / Chain of Credit Advice |
+| 1.3 | **Missing** | Missing Field / Data | "Record date is missing." / "Yes/No option not selected." / "Payment type not selected." | LOR / COR / Credit Advice / Claim Form / BO List |
+| 1.4 | **Missing** | Missing Signing and Stamping | "Document (XXXX) is not signed / stamped / certified." | Bank Certificate / COR / POA / V2 Form / Breakdown |
+| 1.5 | **Missing** | Incomplete Document / Section | "In document (XXXX), the section/part (YYYY) is incomplete or missing." | Form XXXX / Annex / BO List / Reclaim Form |
+| 1.6 | **Missing** | Invalid / Incorrect Document | "Document (XXXX) is not valid. (Limitation is on DD/MM/YYYY.)" / "Incorrect IBAN used." | LOR / IB95 / Bank Certificate |
+
+---
+
+| # | Category | Sub-Category | Harmonized Template Comment | Document Type(s) |
+|---|----------|-------------|----------------------------|-----------------|
+| 2.1 | **Discrepancies** | Mismatch — TIN | "Mismatch of TIN between document (XXXX) and system (YYYY)." / "Mismatch of TIN between document (XXXX) and document (YYYY)." | COR / COR-COE / F6166 / BO List / Reclaim Form / Breakdown / Annex |
+| 2.2 | **Discrepancies** | Mismatch — Entity Type | "Mismatch of Entity type between document (XXXX) and system (YYYY)." | BO Declaration / Credit Advice |
+| 2.3 | **Discrepancies** | Mismatch — Beneficial Owner Name | "Mismatch of BO name between document (XXXX) and system (YYYY)." | LOR / BO Declaration / LOA / Credit Advice / IB95 / IB96 |
+| 2.4 | **Discrepancies** | Mismatch — Beneficial Owner Address | "Mismatch of address of BO between document (XXXX) and system (YYYY)." | LOR / BO Declaration / LOA / Credit Advice / IB95 / IB96 |
+| 2.5 | **Discrepancies** | Mismatch — Client Name / Entity | "Name of client incorrectly filled in space provided for BNP entity." / "Full name of the BNP entity to be mentioned." | LOR / Credit Advice |
+| 2.6 | **Discrepancies** | Mismatch — Record Date | "Mismatch of record date between document (XXXX) and system (YYYY)." | LOR / Credit Advice / BO Declaration / Breakdown / Claim Form |
+| 2.7 | **Discrepancies** | Mismatch — Pay Date | "Mismatch of pay date between document (XXXX) and system (YYYY)." | LOR / Credit Advice / Breakdown / Claim Form |
+| 2.8 | **Discrepancies** | Mismatch — Quantity / Shares | "Mismatch of quantity / shares between document (XXXX) and system (YYYY)." | LOR / Credit Advice / IB95 / BO Declaration / Breakdown / Claim Form |
+| 2.9 | **Discrepancies** | Mismatch — ISIN / Security Identifier | "Mismatch of ISIN between document (XXXX) and system (YYYY)." | LOR / BO Declaration / Breakdown / Claim Form |
+| 2.10 | **Discrepancies** | Mismatch — Security Name | "Mismatch of security name between document (XXXX) and system (YYYY)." | Credit Advice |
+| 2.11 | **Discrepancies** | Mismatch — Currency / GUP / Gross Amount / Net Amount | "Mismatch of currency / GUP / gross amount / net amount between document (XXXX) and system (YYYY)." | Credit Advice / Breakdown / BO Declaration / Claim Form |
+| 2.12 | **Discrepancies** | Mismatch — Reclaim Percentage / Amount | "Mismatch of reclaim percentage / amount between document (XXXX) and system (YYYY)." / "Reclaim percentage incorrect — BO eligible for XX% per document (XXXX)." | Credit Advice / IB95 / Claim Form |
+| 2.13 | **Discrepancies** | Mismatch — Account Number | "Mismatch of account number between document (XXXX) and system (YYYY)." | LOR / Credit Advice / Bank Certificate / BO List |
+| 2.14 | **Discrepancies** | Mismatch — Ex-Date / Gross-Amt / Net-Amt / WHT | "Mismatch of ex-date / gross amount / net amount / WHT between document (XXXX) and system (YYYY)." | Credit Advice / Breakdown / Claim Form |
+| 2.15 | **Discrepancies** | Mismatch — Certificate of Residence / Tax Residency | "The pay year / coverage period in document (XXXX) does not cover the reclaim pay date." / "Document (XXXX) does not cover the required pay date / tax year / legal status / tax exception." | COR / COR-COE / Bank Statement / Form XXXX |
+| 2.16 | **Discrepancies** | Mismatch — Tax Rate / Tax Procedure | "Incorrect applicable tax rate under DTT mentioned in document (XXXX)." / "Tax form created for procedure (XXXX) in STARR. However, the attached reclaim form application is (YYYY)." | BO List / Claim Form / Standard-Complementary-DTT-Domestic Forms |
+| 2.17 | **Discrepancies** | Incorrect Date Format | "Incorrect date format mentioned in document (XXXX). The required format is YYYY-MM-DD." | Breakdown / Claim Form |
+| 2.18 | **Discrepancies** | Incorrect Form Format | "The provided form format (XXXX) is incorrect. The required format is (YYYY) for this reclaim." | EU CIV / Non-EU CIV / Qualifying UK CIV / Canadian Pension Fund / Canadian Mutual Fund formats |
+| 2.19 | **Discrepancies** | Incorrect Completion by Party | "Document (XXXX) was incorrectly completed by client instead of beneficial owner." | BO Declaration / LOA / Chain |
+| 2.20 | **Discrepancies** | Duplication of Reclaim | "Tax form (XXXX) appears to be a duplicate of tax form (YYYY)." | Form XXXX / Reclaim Form |
+| 2.21 | **Discrepancies** | Below LTT Threshold | "Amount to refund per line is below the threshold of (XXXX) for security account (YYYY). (ISIN-XXXX, pay date-XXXX, quantity-XXXX, GUP-XXXX)." | Breakdown / Claim Form |
+| 2.22 | **Discrepancies** | RSIN-related Issue | "Yes/No option not selected on the RSIN assigned by DTA." / "RSIN marked as NO, however Partial Relief at Source applies." | LOR |
+| 2.23 | **Discrepancies** | Other Specific Comments | "Address of client to be mentioned in 2nd line." / "Address of BO to be mentioned in 2nd line." / "Filled both options: Dividend paid in Cash & Securities." / "Selected both basis of refund." | LOA Direct / LOA / IB95 |
+
+---
+
+### Section 2 — Technical / Other Pending Reasons
+
+| # | Category | Sub-Category | Harmonized Template Comment | Document Type(s) |
+|---|----------|-------------|----------------------------|-----------------|
+| 3.1 | **Technical** | Data / Stock Not Found in System | "Payment line / BO / Stock not found in system or breakdown file (XXXX). (ISIN-XXXX, pay date-XXXX, GUP-XXXX.)" | — |
+| 3.2 | **Technical** | Technical Constraint — Processing Side | "Technical constraint — unable to link BO or payment line (matrix line / BO creation / other issue)." | — |
+| 3.3 | **Technical** | DTIN Discrepancy | "DTIN in document (XXXX) belongs to a different BO (Name BO) in the system." / "DTIN (XXXX) is assigned in the system to BO (Name BO), not to the BO named in the document." | — |
+| 3.4 | **Technical** | Fund / Entity Ineligibility | "SICAV / FCP / Special Fund is not eligible for reclaims unless the form has been initiated by the final beneficiary (proceeding to submit to tax authority, as requested)." / "SIX SIS — Legal status for Special Funds under (XXXX) Residency — cannot be processed." | N/A |
+| 3.5 | **Other** | Missing in Fiscal Document Management | "Document(s) missing in Fiscal Document Management for depot code (XXXX)." | Form XXXX / Annex |
+| 3.6 | **Other** | Document Returned via Logistics | "Documents returned to branch via DHL — tracking (XXXX)." | — |
+| 3.7 | **Other** | Reclaim Service Disclaimer | "BNP Paribas will not assist in processing or filing these tax treaty applications. Investors may file their applications directly with the relevant Tax Authorities with the assistance of their appointed tax advisor if needed." | — |
+
+---
+
+### Key Design Principles Applied
+
+| Principle | Detail |
+|-----------|--------|
+| **XXXX / YYYY placeholders** | Preserved throughout — consistent with existing convention across all markets |
+| **Document types** | Generalized; market-specific forms (276DIV, Form 85, Form 5000/5001, IB95/96, F6166) are inserted as values of XXXX |
+| **Category structure** | Three top-level categories: *Missing*, *Discrepancies*, *Technical/Other* — maps cleanly to NL, FR, BE, CH structures |
+| **Market-specific rules absorbed** | FR's LTT threshold, duplication, and reclaim service disclaimer; CH's SIX SIS ineligibility; BE's SICAV eligibility; NL's RSIN — all retained as sub-categories rather than market siloes |
+| **Comment style** | Sentence-case, factual, no market-specific jargon hardcoded into the comment itself |
+
+---
+
+**Next step recommendation:** This framework can serve as a new `Reference sheet - ALL` tab in your ERROR LOG.xlsx, with a dropdown or lookup mechanism to pull the appropriate template comment into the Error Comments sheet based on Category + Sub-Category selection. Want me to build that out?
