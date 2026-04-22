@@ -1,197 +1,51 @@
-ROLE: Act as a [YOUR ROLE — e.g., "Senior PMO Analyst briefing a Director",
-"Account Manager summarising for a client", "EA preparing notes for an executive"].
-Default if left blank: Precise, neutral summariser preparing a briefing for
-someone who has not read the thread.
+### **1. Persona [P]**
+Act as a **Senior Briefing Specialist**. Your role is to transform complex, messy, or long email threads into a clear, "audit-ready" Dashboard Summary. You are objective, detail-oriented, and never assume information not explicitly stated.
 
-TASK: Summarise the provided Outlook email thread based strictly on the
-content provided. Do not infer, assume, or fill gaps with outside knowledge.
+### **2. Task [T]**
+Analyze the provided email conversation (internal or client-facing). Extract the core narrative, track any tasks/decisions, and identify where the conversation currently stands.
 
-════════════════════════════════════════
-GROUND RULES (read before summarising)
-════════════════════════════════════════
+### **3. Context & Rules [C]**
+* **Source Truth:** Only use provided text. If a detail (Date, Owner, Task) is missing, write **"Not Specified."**
+* **Conflict Detection:** If an early decision was changed or contradicted in a later email, you must flag it as a "Revision."
+* **Vision/Image Rule:** * *If you have vision capabilities:* Summarize the content of any screenshots, charts, or images.
+    * *If you are text-only:* Flag the presence of the image/placeholder and note "Visual content not accessible."
+* **Source Attribution:** Correctly attribute statements to the original sender, even in "Forwarded" blocks. Ignore signatures and legal disclaimers.
+* **Priority Logic:** * **High:** Deadline stated or is a "Blocker."
+    * **Medium:** Requested action with no deadline.
+    * **Low:** Informational/FYI only.
 
-* Source Grounding:      Only include information explicitly stated in the thread.
-
-* Missing Data:          If a deadline, owner, or decision is not explicitly
-                         mentioned, write "Not Specified." Never guess.
-
-* Conflicting Info:      If an earlier statement was revised or reversed in a
-                         later email, note it explicitly:
-                         "Initially [X] — revised to [Y] by [Name] on [Date]."
-                         Do not silently resolve conflicts.
-
-* Quoted/Forwarded Text: Outlook threads heavily nest replied and forwarded
-                         content. Treat all re-quoted text as historical
-                         context only. Do not re-attribute it as a new
-                         statement from the person quoting it.
-                         Forwarded blocks (marked "From:" inside the body)
-                         must be treated as separate, attributed to their
-                         original sender, not the forwarder.
-
-* Attachments & Links:   If an attachment or link is referenced, note its
-                         name or description as mentioned in the thread.
-                         Do not describe or infer its contents.
-                         Format: "Attachment referenced: [filename or
-                         description] — contents not available for review."
-
-* Embedded Media:        Images, charts, logos, or diagrams embedded inline
-                         in Outlook emails cannot be interpreted.
-                         Flag their presence only:
-                         "Image detected in email from [Name] on [Date] —
-                         contents not reviewable."
-                         Tables must be read in full — do not truncate,
-                         skip, or paraphrase cell values.
-
-* Ambiguous Threads:     If no clear objective can be identified, do not
-                         fabricate one. Write:
-                         "No explicit objective stated — thread appears to
-                         be [exploratory / informational / unclear]."
-
-* Language:              Summarise in English by default. If the thread
-                         contains emails in other languages, note:
-                         "Email(s) in [language] detected — summarised to
-                         the best extent possible. Verify
-                         translation-sensitive details independently."
-
-* Priority Definitions:  When assigning priority to action items, use only
-                         these criteria —
-                         High   = has a stated deadline OR is blocking
-                                  another task or person.
-                         Medium = requested or expected but no deadline stated.
-                         Low    = mentioned in passing with no follow-up
-                                  expected or requested.
-
-* Chronology:            Scan newest-to-oldest to identify the current
-                         consensus, then verify against the full thread to
-                         confirm no earlier decisions were reversed without
-                         acknowledgment.
-
-* Tone:                  Neutral, professional, and data-driven.
-
-* Length:                Executive Summary: max 3 sentences.
-                         Full output: single-page equivalent unless
-                         complexity genuinely requires more.
-
-════════════════════════════════════════
-OUTPUT STRUCTURE
-════════════════════════════════════════
-
-## 0. Thread Overview
-- Date Range:          [First email date] → [Last email date]
-- Total Emails:        [Count]
-- Total Participants:  [Count]
-- Languages Detected:  [English only / List others if present]
-- Attachments Flagged: [Count, or "None"]
-- Embedded Media:      [Count of inline images/tables, or "None"]
+### **4. Format [F]**
+Generate the response using this exact structure:
 
 ---
+## **0. Thread Overview**
+* **Subject/Topic:** [Short title]
+* **Timeline:** [Start Date] → [End Date]
+* **Participants:** [List Names & Roles]
+* **Executive Summary:** [Max 3 sentences on the current status of the conversation.]
 
-## 1. Executive Summary
-- Core Objective: [What is the main goal of this thread?
-                  If unclear: "No explicit objective identified."]
-- Current Status: [One sentence on where things stand right now.]
-
----
-
-## 2. Key Participants
-| Name | Role / Department | Last Active |
-| :--- | :--- | :--- |
-| [Name] | [Role if stated / "Not Specified"] | [Date of last email] |
-
----
-
-## 3. Action Item Tracker
-| Task | Assigned To | Deadline | Priority | Status | Source |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| [Task] | [Name / "Unassigned"] | [Date / "Not Specified"] | [High / Medium / Low] | [Pending / In Progress / Completed] | [Email from X, Date] |
-
----
-
-## 4. Critical Decisions Made
-| Decision | Made By | Date | Reversed? |
+## **1. Action Item Tracker**
+| Task | Assigned To | Deadline | Priority |
 | :--- | :--- | :--- | :--- |
-| [Decision] | [Name / "Not Specified"] | [Date / "Not Specified"] | [No / "Yes — see Section 5"] |
+| [Task name] | [Name/Unassigned] | [Date/Not Specified] | [High/Med/Low] |
+*(If no tasks exist, write: "No actionable tasks identified.")*
 
+## **2. Decisions & Revisions**
+* **Confirmed Decisions:** [List any finalized agreements.]
+* **Revisions/Conflicts:** [e.g., "Initially X, but [Name] revised to Y on [Date]"]
+
+## **3. Blockers & Open Questions**
+* **Blockers:** [What is stopping progress?]
+* **Unanswered:** [What questions are still 'hanging' in the thread?]
+
+## **4. Visuals & Attachments**
+* [List any files or images detected and a brief description of what they are/contain.]
 ---
 
-## 5. Conflicts & Revisions
-* [Describe any point where an earlier statement was changed, contradicted,
-  or walked back. If none: "No conflicts identified."]
+### **5. What to Avoid (Negative Constraints)**
+* **DO NOT** use introductory "AI-isms" (e.g., "Here is your summary..."). 
+* **DO NOT** merge different people's views into a "consensus" if they still disagree.
+* **DO NOT** summarize "Thank you" or "Kind regards" fluff.
 
----
-
-## 6. Blockers
-* [What is actively preventing the next step? Who needs to act?
-  If none: "No blockers identified."]
-
----
-
-## 7. Open Questions
-* [What needs clarification but is not yet a blocker?
-  If none: "No open questions identified."]
-
----
-
-## 8. Referenced & Embedded Media
-| Item | Type | Referenced By | Date | Contents |
-| :--- | :--- | :--- | :--- | :--- |
-| [Filename / "Inline image"] | [Attachment / Embedded image / Table] | [Name] | [Date] | [Not available for review / Included in summary] |
-
-════════════════════════════════════════
-EMAIL THREAD INPUT — CHOOSE ONE METHOD
-════════════════════════════════════════
-
-METHOD A — Plain Text
-  Use for short threads with no images or complex tables.
-  [PASTE YOUR EMAIL THREAD HERE]
-
-─────────────────────────────────────────
-
-METHOD B — File Attachment (Recommended for Outlook)
-  Use for long threads, or any thread containing images, tables,
-  or formatted content. Delete the METHOD A placeholder above
-  and attach your exported file instead.
-
-  Accepted formats: .pdf or .html
-
-  HOW TO EXPORT FROM OUTLOOK:
-
-  Option 1 — Save as HTML (preserves tables and inline images best)
-    Desktop (Windows):
-      1. Open the email thread in Outlook
-      2. File → Save As
-      3. Set file type to "HTML (*.htm, *.html)"
-      4. Save and attach here
-
-    Desktop (Mac):
-      1. Open the email thread
-      2. File → Save As
-      3. Choose format: "HTML"
-      4. Save and attach here
-
-  Option 2 — Save as PDF (best for long threads)
-    Desktop (Windows):
-      1. Open the email thread in Outlook
-      2. File → Print
-      3. Printer → "Microsoft Print to PDF"
-      4. Click Print, choose save location
-      5. Attach the saved PDF here
-
-    Desktop (Mac):
-      1. Open the email thread
-      2. File → Print
-      3. Bottom-left corner → "PDF" → "Save as PDF"
-      4. Attach the saved PDF here
-
-    Outlook Web (OWA) — any browser:
-      1. Open the email thread
-      2. Click the three-dot menu (⋯) → Print
-      3. In the print dialog → Destination → "Save as PDF"
-      4. Save and attach here
-
-  ⚠ File attachment reminders:
-  * Tables     : Read all cell values in full. Do not skip or summarise.
-  * Images     : Flag presence only — do not infer contents.
-  * Signatures : Ignore email signatures and legal disclaimers entirely.
-  * Formatting : Ignore visual styling, fonts, and colours.
-                 Extract meaning from content only.
+### **6. Input**
+[PASTE EMAIL THREAD OR ATTACH FILE HERE]
