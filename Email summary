@@ -13,14 +13,17 @@ Important image-handling rule:
 - Do not pretend to have analysed an image unless the visual content was actually available to the model.
 
 Task:
-Analyse the HTML email thread in strict chronological order, oldest email first.
+Deeply analyse the HTML email thread in strict chronological order, oldest email first, but do not produce a separate analysis for every email unless needed for clarity.
 
-Your goal is to explain:
-1. What happened in the thread
-2. What each email added or changed
-3. What action is expected
-4. Who is expected to act
-5. What remains open, unclear, or blocked
+Your final output should be a clear, detailed, business-ready summary of:
+1. What the email thread is about
+2. How the discussion evolved over time
+3. What has already been agreed, decided, rejected, clarified, or completed
+4. What action is expected next
+5. Who is expected to act
+6. Who requested the action
+7. Any deadline or urgency mentioned
+8. What remains open, unclear, blocked, or dependent on others
 
 Grounding rules:
 - Use only the content found in the provided HTML file and extracted/rendered embedded images.
@@ -32,60 +35,45 @@ Grounding rules:
 - Do not treat a suggestion as an approved action.
 - Do not invent owners, deadlines, dates, commitments, or missing replies.
 - Preserve the difference between new email content, quoted older content, forwarded messages, signatures, disclaimers, and embedded images.
-
-HTML parsing rules:
-- Identify each email message within the HTML thread.
-- Extract visible metadata where available: date/time, sender, recipients, CC, subject.
-- Sort emails chronologically from oldest to newest.
-- If the HTML order differs from the actual email dates, use the email dates where clearly available.
-- If chronology is unclear, state this explicitly.
 - Ignore boilerplate signatures, confidentiality disclaimers, tracking pixels, repeated logos, and decorative images unless they contain relevant business information.
-- If embedded images contain screenshots, tables, charts, approvals, comments, system messages, error messages, dates, figures, or instructions, analyse them as evidence.
-- If an embedded image is unreadable, unavailable, or only decorative, say so.
 
-For each email, analyse:
-- Email number
-- Date/time
-- Sender
-- Recipients/CC
-- Subject
-- Key message
-- Action requested or committed
-- How this email changes the status of the issue
-- Relevant embedded image findings, if any
-- Supporting evidence from the HTML email/thread
+Chronology rule:
+- Internally reconstruct the thread in chronological order before summarising.
+- If the HTML order differs from the actual email dates, rely on the email dates where clearly available.
+- If chronology is unclear, state this explicitly.
+- Do not dump a full email-by-email breakdown unless it is necessary to explain ambiguity or contradiction.
+
+Embedded image rule:
+- If embedded images contain screenshots, tables, charts, approvals, comments, system messages, error messages, dates, figures, or instructions, include the relevant findings in the summary.
+- Clearly state when a finding comes from an embedded image rather than the email body.
+- If an embedded image is unreadable, unavailable, or only decorative, say so briefly.
 
 Output format:
 
 ## Executive Summary
-Summarise the main issue, current status, most important pending actions, and key blockers.
+Provide a detailed but concise summary of the overall thread:
+- Main issue
+- Background context
+- How the discussion progressed
+- Current status
+- Most important conclusion
 
-## Chronological Email Analysis
-Analyse each email one by one from oldest to newest.
+## Timeline Summary
+Summarise the key developments in chronological order. Do not analyse every email separately unless necessary. Focus only on meaningful changes, requests, decisions, clarifications, blockers, or completions.
 
-For each email, use this format:
+## Actions Expected
 
-**Email #[number]**
-- **Date/time:** 
-- **Sender:** 
-- **Recipients/CC:** 
-- **Subject:** 
-- **Key message:** 
-- **Action requested or committed:** 
-- **Embedded image findings:** 
-- **Status impact:** 
-- **Evidence:** 
-
-## Action Item Matrix
-
-| Action | Owner | Requested By | Deadline | Status | Source |
+| Action | Owner | Requested By | Deadline | Status | Evidence |
 |---|---|---|---|---|---|
 
 Status must be one of:
 Open, Completed, Blocked, Pending confirmation, Suggested, or Unclear.
 
-## Decisions / Approvals
-List any decisions, approvals requested, approvals granted, approvals rejected, or approvals still pending.
+## Decisions / Approvals / Confirmations
+List any decisions made, approvals requested, approvals granted, approvals rejected, or confirmations still pending.
+
+## Embedded Image Findings
+Summarise only business-relevant image findings. Ignore logos, signatures, and decorative images.
 
 ## Open Questions / Ambiguities
 List anything unresolved, contradictory, missing, unreadable, or unclear.
