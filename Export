@@ -1,0 +1,12 @@
+You are extracting a table from an image into CSV. Output ONLY the CSV in a single code block, with no explanation.
+
+Rules:
+- Use a comma as the delimiter. Keep a full stop as the decimal separator.
+- Line 1 of your output MUST be this header row, copied exactly:
+Société française débitrice des dividendes,Date de mise en paiement des dividendes,Nombre de titres et durée de détention (jours),Pourcentage de participation,Date à laquelle le seuil a été atteint,Valeur unitaire du coupon (EUR),Montant total (EUR),Retenue à la source totale législation interne (EUR),Retenue à la source exigible convention applicable ou droit interne (EUR),Retenue à la source effectivement prélevée (EUR),Montant du dégrèvement demandé (EUR)
+- Line 2 onwards: one row per company line in the table.
+- The table has exactly 11 columns, so every row (header included) must have exactly 11 values, i.e. 10 commas.
+- If a cell is empty, leave it empty but keep the comma. Do not shift values left. Columns 4 and 5 are often blank.
+- Copy numbers and dates exactly as printed (e.g. 01.04.2025, 0.79000, 2109.30). Do not round, reformat or correct them.
+- Do not include the column-number row (1 to 11) or any text outside the table.
+- Ignore empty rows.
